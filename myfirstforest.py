@@ -12,6 +12,7 @@ import re
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.decomposition import PCA
+from sklearn.grid_search import GridSearchCV
 
 # Data cleanup
 # TRAIN DATA
@@ -71,8 +72,10 @@ train_df['Cabin'] = train_df.Cabin.astype(str).map(lambda x: x.split(' ')[0])
 train_df['Cabin'] = train_df['Cabin'].map(lambda x: int(str(ord(x[0])) + x[1:]) if x != 'nan' else 0).astype(int)
 
 # Remove the Name column, Cabin, Ticket, and Sex (since I copied and filled it to Gender)
-train_df = train_df.drop(['Name', 'Sex', 'Ticket', 'Cabin', 'PassengerId',
-                          'SibSp', 'Parch', 'family', 'family_size', 'title'], axis=1)
+train_df = train_df.drop(['Name', 'Sex', 'Ticket', 'PassengerId',
+                          'SibSp',],
+#                         'Parch', 'Cabin', 'family', 'family_size', 'title'],
+                         axis=1)
 
 
 #         int64
@@ -137,8 +140,10 @@ test_df['Cabin'] = test_df['Cabin'].map(lambda x: int(str(ord(x[0])) + x[1:]) if
 
 
 # Remove the Name column, Cabin, Ticket, and Sex (since I copied and filled it to Gender)
-test_df = test_df.drop(['Name', 'Sex', 'Ticket', 'Cabin', 'PassengerId',
-                        'SibSp', 'Parch', 'family', 'family_size', 'title'], axis=1)
+test_df = test_df.drop(['Name', 'Sex', 'Ticket', 'PassengerId',
+                        'SibSp',],
+#                         'Parch', 'Cabin', 'family', 'family_size', 'title'],
+                       axis=1)
 
 
 # The data is now ready to go. So lets fit to the train, then predict to the test!
@@ -152,8 +157,21 @@ print 'Training...'
 X = train_data[0::, 1::]
 y = train_data[0::, 0]
 
-forest = RandomForestClassifier(n_estimators=100)
-forest = forest.fit( X, y )
+parameters = {
+        'n_estimators'      : [100, 150, 200, 250],
+        'max_features'      : [3, 4, 5, 6, 7],
+        'random_state'      : [0],
+        'n_jobs'            : [2],
+        'min_samples_split' : [3, 5, 10, 15, 20, 25],
+        'max_depth'         : [3, 5, 10, 15, 20, 25]
+}
+clf = GridSearchCV(RandomForestClassifier(), parameters)
+
+
+#forest = RandomForestClassifier(n_estimators=100)
+clf.fit( X, y )
+
+forest = clf.best_estimator_
 
 print 'Predicting...'
 output = forest.predict(test_data).astype(int)
