@@ -162,7 +162,7 @@ y = train_data[0::, 0]
 
 parameters = {
         'n_estimators'      : [100, 150, 200, 250],
-        'max_features'      : [3, 4, 5],
+        'max_features'      : [3, 4],
         'random_state'      : [0],
         'n_jobs'            : [2],
         'min_samples_split' : [3, 5, 10, 15, 20, 25],
