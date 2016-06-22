@@ -1,25 +1,20 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import pandas as pd
 import csv
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from hyperopt import fmin, tpe, hp, rand
 from sklearn import cross_validation
 from .clf import CLF
 
 from .load_data import train_df, test_data, ids
 
-class RF:
+class LR:
 
     def __init__(self):
         self.parameters = {
-            'n_estimators': [100, 150, 200, 250],
-            'max_features': [3, 4],
-            'random_state': [0],
-            'n_jobs': [2],
-            'min_samples_split': [3, 5, 10, 15, 20, 25],
-            'max_depth': [3, 5, 10, 15, 20, 25]
+            'penalty': ['l1', 'l2'],
+            'C': [1.0, 2.0, 3.0]
         }
 
         self.hp_choice = dict([(key, hp.choice(key, value))
@@ -31,21 +26,15 @@ class RF:
 
         def estimator(args):
             print "Args:", args
-            forest = RandomForestClassifier(**args)
+            forest = LogisticRegression(**args)
 
-            #trainX, testX, trainy, testy = cross_validation.train_test_split(
-            #    X, y, test_size=0.4, random_state=0)
+            trainX, testX, trainy, testy = cross_validation.train_test_split(
+                X, y, test_size=0.4, random_state=0)
 
-            forest.fit( X, y )
+            forest.fit( trainX, trainy )
 
             #    print 'Predicting...'
-            #acu = forest.score(testX, testy)
-
-            test = pd.read_csv('gendermodel.csv')
-            testy = test['Survived'].values
-
-            acu = forest.score(test_data, testy)
-
+            acu = forest.score(testX, testy)
 
             print "Accurate:", acu
             return -acu
@@ -59,12 +48,8 @@ class RF:
 
         estimator(best)
 
-        self.clf = RandomForestClassifier(**best)
+        self.clf = LogisticRegression(**best)
         self.clf.fit( X, y)
-
-        print 'Importance:'
-        print train_df.dtypes
-        print self.clf.feature_importances_
 
     def output(self):
         output = self.clf.predict(test_data).astype(int)
@@ -77,4 +62,4 @@ class RF:
         print 'Done.'
 
 
-CLF.register(RF)
+CLF.register(LR)
