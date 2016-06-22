@@ -10,7 +10,7 @@ import numpy as np
 import csv as csv
 import re
 
-from load_data import train_data, test_data
+from load_data import train_df, test_df, train_data, test_data, ids
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
