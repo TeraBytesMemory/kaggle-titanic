@@ -13,6 +13,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.decomposition import PCA
 from sklearn.grid_search import GridSearchCV
+from hyperopt import fmin, tpe, hp, rand
+from sklearn import cross_validation
 
 # Data cleanup
 # TRAIN DATA
@@ -161,20 +163,41 @@ X = train_data[0::, 1::]
 y = train_data[0::, 0]
 
 parameters = {
-        'n_estimators'      : [100, 150, 200, 250],
-        'max_features'      : [3, 4],
-        'random_state'      : [0],
-        'n_jobs'            : [2],
-        'min_samples_split' : [3, 5, 10, 15, 20, 25],
-        'max_depth'         : [3, 5, 10, 15, 20, 25]
+    'n_estimators': [100, 150, 200, 250],
+    'max_features': [3, 4],
+    'random_state': [0],
+    'n_jobs': [2],
+    'min_samples_split': [3, 5, 10, 15, 20, 25],
+    'max_depth': [3, 5, 10, 15, 20, 25]
 }
-clf = GridSearchCV(RandomForestClassifier(), parameters)
 
+hp_choice = dict([(key, hp.choice(key, value))
+                  for key, value in parameters.items()])
+#clf = GridSearchCV(RandomForestClassifier(), parameters)
 
-#forest = RandomForestClassifier(n_estimators=100)
-clf.fit( X, y )
+def estimator(args):
+    print "Args:", args
+    forest = RandomForestClassifier(**args)
 
-forest = clf.best_estimator_
+    trainX, testX, trainy, testy = cross_validation.train_test_split(
+        X, y, test_size=0.4, random_state=0)
+
+    forest.fit( trainX, trainy )
+
+#    print 'Predicting...'
+    acu = forest.score(testX, testy)
+
+    print "Accurate:", acu
+    return -acu
+
+best = fmin(estimator, hp_choice, algo=tpe.suggest, max_evals=5)
+best = dict([(key, parameters[key][value]) for key, value in best.items()])
+print "\nBest Model..."
+
+estimator(best)
+
+forest = RandomForestClassifier(**best)
+forest.fit( X, y)
 
 print 'Predicting...'
 output = forest.predict(test_data).astype(int)
@@ -196,5 +219,5 @@ test = pd.read_csv('gendermodel.csv')
 
 c = len(filter(lambda x: result['Survived'][x] == test['Survived'][x], xrange(len(test))))
 
-print "Accurate:", float(c) / len(test)
-
+acu =  float(c) / len(test)
+print "Accurate:", acu
