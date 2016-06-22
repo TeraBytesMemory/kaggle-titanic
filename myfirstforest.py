@@ -71,11 +71,13 @@ train_df['family_size']=train_df.SibSp+train_df.Parch+1
 train_df['Cabin'] = train_df.Cabin.astype(str).map(lambda x: x.split(' ')[0])
 train_df['Cabin'] = train_df['Cabin'].map(lambda x: int(str(ord(x[0])) + x[1:]) if x != 'nan' else 0).astype(int)
 
+train_df['Ticket'] = train_df.Ticket.map(lambda x: x.split(' ')[-1])
+train_df['Ticket'] = train_df.Ticket.map(lambda x: x if re.match(r'[0-9]+', x) else 0)
+train_df['Ticket'] = train_df.Ticket.map(lambda x: int(str(x)[:3])).astype(int)
+
 # Remove the Name column, Cabin, Ticket, and Sex (since I copied and filled it to Gender)
-train_df = train_df.drop(['Name', 'Sex', 'Ticket', 'PassengerId',
-                          'SibSp',],
-#                         'Parch', 'Cabin', 'family', 'family_size', 'title'],
-                         axis=1)
+train_df = train_df.drop(['Name', 'Sex', 'Cabin', 'PassengerId',
+                          'SibSp', 'Parch', 'family', 'family_size', 'title', 'Embarked', 'Pclass'], axis=1)
 
 
 #         int64
@@ -138,12 +140,13 @@ test_df['family_size']=test_df.SibSp+test_df.Parch+1
 test_df['Cabin'] = test_df.Cabin.astype(str).map(lambda x: x.split(' ')[0])
 test_df['Cabin'] = test_df['Cabin'].map(lambda x: int(str(ord(x[0])) + x[1:]) if x != 'nan' else 0).astype(int)
 
+test_df['Ticket'] = test_df.Ticket.map(lambda x: x.split(' ')[-1])
+test_df['Ticket'] = test_df.Ticket.map(lambda x: x if re.match(r'[0-9]+', x) else 0)
+test_df['Ticket'] = test_df.Ticket.map(lambda x: int(str(x)[:3])).astype(int)
 
 # Remove the Name column, Cabin, Ticket, and Sex (since I copied and filled it to Gender)
-test_df = test_df.drop(['Name', 'Sex', 'Ticket', 'PassengerId',
-                        'SibSp',],
-#                         'Parch', 'Cabin', 'family', 'family_size', 'title'],
-                       axis=1)
+test_df = test_df.drop(['Name', 'Sex', 'Cabin', 'PassengerId',
+                        'SibSp', 'Parch', 'family', 'family_size', 'title', 'Embarked', 'Pclass'], axis=1)
 
 
 # The data is now ready to go. So lets fit to the train, then predict to the test!
@@ -159,7 +162,7 @@ y = train_data[0::, 0]
 
 parameters = {
         'n_estimators'      : [100, 150, 200, 250],
-        'max_features'      : [3, 4, 5, 6, 7],
+        'max_features'      : [3, 4, 5],
         'random_state'      : [0],
         'n_jobs'            : [2],
         'min_samples_split' : [3, 5, 10, 15, 20, 25],
@@ -177,8 +180,8 @@ print 'Predicting...'
 output = forest.predict(test_data).astype(int)
 
 print train_df.dtypes
-#print 'Importance:'
-#print forest.feature_importances_
+print 'Importance:'
+print forest.feature_importances_
 
 
 predictions_file = open("myfirstforest.csv", "wb")
