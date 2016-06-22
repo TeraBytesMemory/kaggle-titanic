@@ -11,9 +11,13 @@ from clf.xgb import XGB
 
 
 def output(clf):
+    '''
     new_featrue = np.dot(test_data[:, idx], np.array(fscore))
     new_featrue = new_featrue / np.linalg.norm(new_featrue)
     _test_data = np.hstack((test_data, new_featrue[np.newaxis].T))
+    '''
+    new_featrue = xgb_clf.clf.predict_proba(test_data)
+    _test_data = np.hstack((test_data, new_featrue))
 
     output = clf.clf.predict(_test_data).astype(int)
 
@@ -34,12 +38,16 @@ y = train_data[0::, 0]
 xgb_clf = XGB()
 xgb_clf.fit(X, y)
 
+'''
 fscore = xgb_clf.clf.booster().get_fscore().values()
 idx = [int(v[1:]) for v in xgb_clf.clf.booster().get_fscore().keys()]
 
 new_featrue = np.dot(X[:, idx], np.array(fscore))
 new_featrue = new_featrue / np.linalg.norm(new_featrue)
-X = np.hstack((X, new_featrue[np.newaxis].T))
+'''
+new_featrue = xgb_clf.clf.predict_proba(X)
+#X = np.hstack((X, new_featrue[np.newaxis].T))
+X = np.hstack((X, new_featrue))
 
 rf_clf = RF()
 rf_clf.fit(X, y)

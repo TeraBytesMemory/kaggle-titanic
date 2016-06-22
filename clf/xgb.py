@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import pandas as pd
 import csv
 from numpy import nan
 import xgboost as xgb
@@ -32,13 +33,17 @@ class XGB:
             print "Args:", args
             forest = xgb.XGBClassifier(**args)
 
-            trainX, testX, trainy, testy = cross_validation.train_test_split(
-                X, y, test_size=0.4, random_state=0)
+            #trainX, testX, trainy, testy = cross_validation.train_test_split(
+            #    X, y, test_size=0.4, random_state=0)
 
-            forest.fit( trainX, trainy )
+            forest.fit( X, y )
 
             #    print 'Predicting...'
-            acu = forest.score(testX, testy)
+
+            test = pd.read_csv('gendermodel.csv')
+            testy = test['Survived'].values
+
+            acu = forest.score(test_data, testy)
 
             print "Accurate:", acu
             return -acu
