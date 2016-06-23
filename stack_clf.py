@@ -18,9 +18,12 @@ def output(clf):
     _test_data = np.hstack((test_data, new_featrue[np.newaxis].T))
     '''
     new_featrue = xgb_clf.clf.predict_proba(test_data)
+    new_feature_ = new_feature[:,0] * new_feature[:, 1]
     new_featrue2 = rf_clf.clf.predict_proba(test_data)
+    new_feature2_ = new_feature2[:, 0] * new_feature2[:, 1]
 
-    _test_data = np.hstack((new_featrue, new_featrue2))
+    _test_data = np.hstack((new_feature, new_feature_[np.newaxis].T,
+                            new_feature2, new_feature2_[np.newaxis].T))
 
     output = clf.clf.predict(_test_data).astype(int)
 
@@ -51,9 +54,14 @@ idx = [int(v[1:]) for v in xgb_clf.clf.booster().get_fscore().keys()]
 new_featrue = np.dot(X[:, idx], np.array(fscore))
 new_featrue = new_featrue / np.linalg.norm(new_featrue)
 '''
-new_featrue = xgb_clf.clf.predict_proba(X)
-new_featrue2 = rf_clf.clf.predict_log_proba(X)
-X = np.hstack((new_featrue, new_featrue2))
+new_feature = xgb_clf.clf.predict_proba(X)
+new_feature_ = new_feature[:, 0] * new_feature[:, 1]
+
+new_feature2 = rf_clf.clf.predict_log_proba(X)
+new_feature2_ = new_feature2[:, 0] * new_feature2[:, 1]
+
+X = np.hstack((new_feature, new_feature_[np.newaxis].T,
+               new_feature2, new_feature2_[np.newaxis].T))
 
 lr_clf = LR()
 lr_clf.fit(X, y)
